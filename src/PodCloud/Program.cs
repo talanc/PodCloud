@@ -71,6 +71,10 @@ namespace PodCloud
 
             [Option("conn-str", HelpText = "Set storage connection string.", SetName = "set")]
             public string ConnectionString { get; set; }
+
+            // preferred video format
+
+            // output audio format
         }
         public static Task<int> RunSettings(SettingsVerb verb)
         {
