@@ -2,7 +2,7 @@
   "profiles": {
     "PodCloud.CommandLine": {
       "commandName": "Project",
-      "commandLineArgs": "info UCbkjX3E0IhuUfPzL0FjSPaw"
+      "commandLineArgs": "download -i 5AgS20fiLHc -o C:\\Users\\talan\\Desktop\\5AgS20fiLHc.mp4"
     }
   }
 }

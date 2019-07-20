@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CommandLine;
 using YoutubeExplode;
+using YoutubeExplode.Models.MediaStreams;
 
 namespace PodCloud
 {
@@ -17,10 +20,11 @@ namespace PodCloud
 
             var result = 0;
 
-            result = await Parser.Default.ParseArguments<InfoVerb, SettingsVerb>(args)
+            result = await Parser.Default.ParseArguments<InfoVerb, SettingsVerb, DownloadVerb>(args)
                 .MapResult(
                     (InfoVerb verb) => RunInfo(verb),
                     (SettingsVerb verb) => RunSettings(verb),
+                    (DownloadVerb verb) => RunDownload(verb),
                     errs => Task.FromResult(1)
                 );
 
@@ -83,6 +87,38 @@ namespace PodCloud
             }
 
             return Task.FromResult(0);
+        }
+
+        [Verb("download", HelpText = "Download videos.")]
+        public class DownloadVerb
+        {
+            [Option('i', "input", Required = true, HelpText = "Input video URL or ID")]
+            public string Input { get; set; }
+
+            [Option('o', "output", Required = true, HelpText = "Output path")]
+            public string Output { get; set; }
+        }
+        static async Task<int> RunDownload(DownloadVerb verb)
+        {
+            var videoId = verb.Input;
+            var outputExt = Path.GetExtension(verb.Output);
+
+            var infos = await youtube.GetVideoMediaStreamInfosAsync(videoId);
+
+            var info = infos.Muxed
+                .OrderBy(curr => curr.Size)
+                .FirstOrDefault(curr => outputExt.Equals("." + curr.Container.GetFileExtension(), StringComparison.OrdinalIgnoreCase));
+
+            if (info == null)
+            {
+                Console.WriteLine($"Could not find suitable video file for '{outputExt}'");
+                return 1;
+            }
+
+            Console.WriteLine("Downloading, this may take a while...");
+            await youtube.DownloadMediaStreamAsync(info, verb.Output);
+
+            return 0;
         }
     }
 }
